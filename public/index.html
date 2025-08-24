@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>File Sharing App</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background:#f2f2f7; display:flex; flex-direction:column; align-items:center; padding:30px;}
+  h1 { color:#1c1c1e; }
+  input[type=file] { margin:20px 0; }
+  button { padding:10px 20px; border:none; border-radius:8px; background:#007aff; color:white; cursor:pointer; margin:5px;}
+  .file-item { margin:10px 0; }
+</style>
+</head>
+<body>
+<h1>Your Files</h1>
+<input type="file" id="fileInput">
+<button id="uploadBtn">Upload</button>
+<div id="filesList"></div>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const uploadBtn = document.getElementById('uploadBtn');
+const filesList = document.getElementById('filesList');
+
+function loadFiles() {
+  fetch('/your-files').then(res=>res.json()).then(files=>{
+    filesList.innerHTML = '';
+    files.forEach(f=>{
+      const div = document.createElement('div');
+      div.className = 'file-item';
+      div.innerHTML = `${f.name} 
+        <button onclick="window.location='${f.link}'">Download</button>
+        <button onclick="navigator.clipboard.writeText(location.origin+'${f.link}')">Copy Link</button>`;
+      filesList.appendChild(div);
+    });
+  });
+}
+
+uploadBtn.addEventListener('click', () => {
+  const file = fileInput.files[0];
+  if (!file) return alert('Select a file');
+  const formData = new FormData();
+  formData.append('file', file);
+  fetch('/upload', { method:'POST', body: formData })
+    .then(res => res.json())
+    .then(res => {
+      if(res.success) {
+        alert('Uploaded!');
+        loadFiles();
+      } else alert('Upload failed');
+    });
+});
+
+loadFiles();
+</script>
+</body>
+</html>
